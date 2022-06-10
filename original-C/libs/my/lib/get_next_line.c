@@ -16,8 +16,6 @@ char *gnl(int fd, short flag)
 
     do {
         ret = read(fd, tmp, 1);
-        if (ret <= 0)
-            return (NULL);
         tmp[ret] = '\0';
         line = my_strcat(line, tmp, 1);
         ++c;

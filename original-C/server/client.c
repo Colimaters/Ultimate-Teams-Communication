@@ -5,6 +5,7 @@ client_t *client_new(int socket)
     client_t *c = malloc(sizeof(client_t));
 
     c->socket = socket;
+    c->is_gone = false;
     c->next = NULL;
     c->prev = NULL;
     return (c);
@@ -25,13 +26,12 @@ void client_add(ctrl_client_t *ctrl, client_t *c)
 void client_del(ctrl_client_t *ctrl, int socket)
 {
     client_t *c = ctrl->head;
-    client_t *prev = NULL, *next = NULL;
+    // client_t *prev = NULL, *next = NULL;
 
     for (; c && c->socket != socket; c = c->next);
     if (!c)
         return;
     if (ctrl->head == ctrl->tail) {
-        my_printf("==\n");
         free(c);
         ctrl->head = NULL;
         ctrl->tail = NULL;
@@ -39,18 +39,14 @@ void client_del(ctrl_client_t *ctrl, int socket)
     }
 
     if (c == ctrl->head) {
-        next = c->next;
-        my_printf("HEAD %d %d\n", c->socket, next->socket);
-
+        // next = c->next;
         c->next->prev = NULL;
         ctrl->head = c->next;
     } else if (c == ctrl->tail) {
-        prev = c->prev;
-        my_printf("TAIL %d %d\n", c->socket, prev->socket);
+        // prev = c->prev;
         c->prev->next = NULL;
         ctrl->tail = c->prev;
     } else {
-        my_printf("base\n");
         c->prev->next = c->next;
         c->next->prev = c->prev;
     }

@@ -6,7 +6,8 @@ SRC_SRV = server/main.c \
 			server/start.c \
 			server/server_init.c \
 			server/server_accept.c \
-			server/client.c
+			server/client.c \
+			server/manage_request.c
 
 SRC_CLI = client/main.c
 

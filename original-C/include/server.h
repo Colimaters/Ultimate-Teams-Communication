@@ -19,6 +19,7 @@
 
 typedef struct client_s {
     int socket;
+    bool is_gone;
     struct client_s *next;
     struct client_s *prev;
 }client_t;
@@ -38,7 +39,9 @@ void help(void);
 int start(const char * const port);
 
 int server_init(server_t *s, int port);
-int accept_loop(server_t *s);
+int server_loop(server_t *s);
+
+void manage_request(client_t *c, char *request);
 
 client_t *client_new(int socket);
 void client_add(ctrl_client_t *ctrl, client_t *c);

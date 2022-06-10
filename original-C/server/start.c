@@ -9,5 +9,5 @@ int start(const char * const port)
     
     if (server_init(&s, atoi(port)) == ERROR)
         return (ERROR);
-    return (accept_loop(&s));
+    return (server_loop(&s));
 }

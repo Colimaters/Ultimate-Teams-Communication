@@ -1,23 +1,39 @@
 #include "../include/server.h"
 
-void read_request(server_t *s, fd_set *rfds)
+void remove_client(server_t *s)
 {
-    // char cmd[MAX_BODY_LENGTH * 2 + 1];
-    char *cmd;
+    client_t *prev = NULL;
 
     for (client_t *tmp = s->clients.head; tmp; tmp = tmp->next) {
-
-        //bzero(cmd, MAX_BODY_LENGTH * 2);
-        if (FD_ISSET(tmp->socket, rfds)) {
-            cmd = gnl(tmp->socket, 1);
-            if (!cmd)
-                continue;
-            // if (read(tmp->socket, cmd, MAX_BODY_LENGTH * 2) <= 0)
-                // continue;
-            my_printf("Client %d send : %s\n", tmp->socket, cmd);
-            dprintf(tmp->socket, "Copy that\n");
-        }
+        prev = tmp->prev;
+        if (!tmp->is_gone)
+            continue;
+        client_del(&s->clients, tmp->socket);
+        if (!prev && s->clients.head)
+            tmp = s->clients.head;
+        else if (!prev && !s->clients.head)
+            return;
+        else
+            tmp = prev;
     }
+}
+
+void read_request(server_t *s, fd_set *rfds)
+{
+    char *request;
+
+    for (client_t *tmp = s->clients.head; tmp; tmp = tmp->next) {
+        if (!FD_ISSET(tmp->socket, rfds))
+            continue;
+        request = gnl(tmp->socket, 1);
+        if (!request) {
+            tmp->is_gone = true;
+            continue;
+        }
+        manage_request(tmp, request);
+    }
+    remove_client(s);
+    client_list(&s->clients);
 }
 
 void accept_client(server_t *s)
@@ -26,13 +42,15 @@ void accept_client(server_t *s)
     struct sockaddr_in addr;
     unsigned int len = sizeof(addr);
 
-    if ((csocket = accept(s->socket, (struct sockaddr *) &addr, &len)) != -1) {
-    	printf("New client %d\n", csocket);
+    if ((csocket = accept(s->socket, (struct sockaddr *) &addr, &len)) == -1) {
+        perror("accept");
+        return;
     }
+    printf("New client %d\n", csocket);
     client_add(&s->clients, client_new(csocket));
 }
 
-int accept_loop(server_t *s)
+int server_loop(server_t *s)
 {
     fd_set rfds;
 
